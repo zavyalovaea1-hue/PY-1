@@ -25,6 +25,10 @@ def open_directory(path):
     except Exception as error:
         mb.showerror('Показывать ошибку', error)
 
+def open_selected():
+    pass
+
+
 win = tk.Tk()
 win.title("Мини-проводник")
 win.geometry("700x500")
@@ -37,6 +41,6 @@ b.pack(pady=10)
 
 listbox = tk.Listbox(win, width=80, height=20, font = ('Arial', 18))
 listbox.pack(pady=10)
-
+listbox.bind('<Double-Button-1>', open_selected)
 
 win.mainloop()
