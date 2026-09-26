@@ -6,43 +6,62 @@ from tkinter import messagebox as mb
 from tkinter import ttk
 
 
+def get_rate(base_code, target_code):
+    pass
+
+
 def update_currency_label(event):
     code = target_combobox.get()
-    name = currencies[code]
-    currency_label.config(text=name)
-
-def update_currency_label1(event):
-    code = target_combobox.get()
-    name = currencies[code]
+    name = currencies[code]  # доставаем название валюты из словаря
     currency_label.config(text=name)
 
 
-def
+def update_base_label1(event):
+    code = base_combobox.get()
+    name = currencies[code]  # доставаем название валюты из словаря
+    base_label1.config(text=name)
+
+
+def update_base_label2(event):
+    code = base_combobox2.get()
+    name = currencies[code]  # доставаем название валюты из словаря
+    base_label2.config(text=name)
 
 
 def exchange():
     target_code = target_combobox.get()
-    base_code = base_combobox.get()
-    if target_code and base_code:
-        try:
-            result = requests.get(f'https://open.er-api.com/v6/latest/{base_code}')
-            result.raise_for_status() # статус сайта
-            # data = json.loads(result.text)  # возвращаем джейсон файл в строковом типе данных
-            data = result.json() # получаем джейсон файл
-            if target_code in data['rates']:
-                exchange_rate = data['rates'][target_code]
-                base = currencies[base_code] # доставем название валюты
-                target = currencies[target_code]
+    base_code1 = base_combobox.get()
+    base_code2 = base_combobox2.get()
 
-                mb.showinfo('Курс обмена',
-                            f'Курс ' 
-                            f'{exchange_rate:.5f} {target} за 1 {base}')
-            else:
-                mb.showerror('Ошибка', f'Валюта {target_code} не найдена')
+    if not target_code:
+        mb.showwarning('Внимание', 'Выберите целевую валюту')
+        return
+    if not base_code1 and not base_code2:
+        mb.showwarning('Внимание', 'Выберите хотя бы одну базовую валюту')
+        return
 
-        except Exception as e:
-            mb.showerror('Ошибка', f'Error 400 {e}')
+    message = ''
 
+
+    if base_code1:
+        rate1 = get_rate(base_code1, target_code)
+        if rate1 is not None:
+            base = currencies[base_code1]  # доставаем название валюты
+            target = currencies[target_code]
+            message += f'{rate1:.5f} {target} за 1 {base}\n'
+
+
+    if base_code2:
+        rate2 = get_rate(base_code2, target_code)
+        if rate2 is not None:
+            base = currencies[base_code2]  # доставаем название валюты
+            target = currencies[target_code]
+            message += f'{rate2:.5f} {target} за 1 {base}'
+
+    if message:
+        mb.showinfo('Курс обмена', message)
+    else:
+        mb.showerror('Ошибка', 'Не удалось получить ни один курс')
 
 currencies = {
     'USD': 'Доллар США',
