@@ -7,7 +7,20 @@ from tkinter import ttk
 
 
 def get_rate(base_code, target_code):
-    pass
+    try:
+        response = requests.get(f'https://open.er-api.com/v6/latest/{base_code}')
+        response.raise_for_status()
+
+        data = response.json()
+
+        if target_code in data['rates']:
+            return data['rates'][target_code]
+        else:
+            mb.showerror('Ошибка', f'Валюта {target_code} не найдена для базы {base_code}')
+            return None
+    except Exception as e:
+        mb.showerror('Ошибка', f'Не удалось получить курс для {base_code}: {e}')
+        return None
 
 
 def update_currency_label(event):
