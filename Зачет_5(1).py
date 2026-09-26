@@ -5,10 +5,19 @@ from tkinter import *
 from tkinter import messagebox as mb
 from tkinter import ttk
 
+
 def update_currency_label(event):
     code = target_combobox.get()
     name = currencies[code]
     currency_label.config(text=name)
+
+def update_currency_label1(event):
+    code = target_combobox.get()
+    name = currencies[code]
+    currency_label.config(text=name)
+
+
+def
 
 
 def exchange():
@@ -35,39 +44,40 @@ def exchange():
             mb.showerror('Ошибка', f'Error 400 {e}')
 
 
-currencies = {'USD':'Доллар США',
-              'EUR':'Евро',
-              'CNY':'Юань',
-              'RUB':'Российский рубль'
-              }
-
+currencies = {
+    'USD': 'Доллар США',
+    'EUR': 'Евро',
+    'CNY': 'Юань',
+    'RUB': 'Российский рубль',
+}
 
 root = Tk()
-root.title('Курс валют')
+root.title('Курс валют ')
 root.geometry('350x420')
 
 # Базовая валюта 1
 Label(text='Базовая валюта 1').pack(pady=10, padx=10)
-base_combobox = ttk.Combobox(values=list(currencies.keys()))
+base_combobox = ttk.Combobox(values=list(currencies.keys()))  # выпадающее меню
 base_combobox.pack()
 base_label1 = ttk.Label()
 base_label1.pack(pady=2, padx=10)
 
 # Базовая валюта 2
 Label(text='Базовая валюта 2').pack(pady=10, padx=10)
-base_combobox2 = ttk.Combobox(values=list(currencies.keys()))
+base_combobox2 = ttk.Combobox(values=list(currencies.keys()))  # выпадающее меню
 base_combobox2.pack()
 base_label2 = ttk.Label()
 base_label2.pack(pady=2, padx=10)
 
 # Целевая валюта
-Label(text='Целевая валюта').pack(pady=10, padx=10)
-target_combobox = ttk.Combobox(values=list(currencies.keys()))
+Label(text='Целевая валюта ').pack(pady=10, padx=10)
+target_combobox = ttk.Combobox(values=list(currencies))  # выпадающее меню
 target_combobox.pack()
 currency_label = ttk.Label()
 currency_label.pack(pady=2, padx=10)
 
-Button(text='Получить курс', command=exchange).pack(pady=15)
+button = Button(text='Получить курс', command=exchange).pack()
+
 base_combobox.bind('<<ComboboxSelected>>', update_base_label1)
 base_combobox2.bind('<<ComboboxSelected>>', update_base_label2)
 target_combobox.bind('<<ComboboxSelected>>', update_currency_label)
