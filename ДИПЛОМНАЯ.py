@@ -1,68 +1,89 @@
 import requests
-import json
 
 from tkinter import *
 from tkinter import messagebox as mb
 from tkinter import ttk
 
-from fastapi import params
+# Словарь: символ → CoinGecko ID
+CRYPTO_IDS = {
+    "BTC": "bitcoin",
+    "ETH": "ethereum",
+    "XRP": "ripple",
+    "ADA": "cardano",
+    "SOL": "solana",
+    "DOGE": "dogecoin",
+    "DOT": "polkadot",
+    "AVAX": "avalanche",
+    "LINK": "chainlink",
+    "LTC": "litecoin",
+}
+
+# Словарь: символ → красивое название для GUI
+CRYPTO_NAMES = {
+    "BTC": "Bitcoin",
+    "ETH": "Ethereum",
+    "XRP": "Ripple",
+    "ADA": "Cardano",
+    "SOL": "Solana",
+    "DOGE": "Dogecoin",
+    "DOT": "Polkadot",
+    "AVAX": "Avalanche",
+    "LINK": "Chainlink",
+    "LTC": "Litecoin",
+}
 
 
-def get_crypto_prices():
+def get_rate(base_code, target_code):
+    """Возвращает курс: сколько target_code стоит 1 base_code."""
+    base_id = CRYPTO_IDS.get(base_code)
+    target_id = CRYPTO_IDS.get(target_code)
+
+    if not base_id or not target_id:
+        mb.showerror("Ошибка", f"Неизвестная криптовалюта: {base_code} или {target_code}")
+        return None
+
     url = "https://api.coingecko.com/api/v3/simple/price"
     params = {
-        "ids": "bitcoin,ethereum,ripple,cardano,solana,dogecoin,polkadot,avalanche,chainlink,litecoin",
+        "ids": f"{base_id},{target_id}",
         "vs_currencies": "usd",
-        "include_24hr_change": "true"
     }
+
     try:
-        resp = requests.get(url, params=params, timeout=10)
-        resp.raise_for_status()
-        data = resp.json()
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
-        # Словарь наименований популярных криптовалют
-        names = {
-            "bitcoin": "BTC",
-            "ethereum": "ETH",
-            "ripple": "XRP",
-            "cardano": "ADA",
-            "solana": "SOL",
-            "dogecoin": "DOGE",
-            "polkadot": "DOT",
-            "avalanche": "AVAX",
-            "chainlink": "LINK",
-            "litecoin": "LTC"
-        }
+        base_price = data.get(base_id, {}).get("usd")
+        target_price = data.get(target_id, {}).get("usd")
 
-        for coin_id, info in data.items():
-            symbol = names.get(coin_id, coin_id.upper())
-            price = info.get("usd")
-            if coin_id in data['price']:
-                return data['price'][coin_id]
-            else:
-            mb.showerror('Ошибка', f'Валюта {target_code} не найдена для базы {base_code}')
+        if base_price is None or target_price is None:
+            mb.showerror("Ошибка", "Не удалось получить цены от API")
             return None
 
-        except Exception as e:
-        mb.showerror('Ошибка', f'Не удалось получить курс для {base_code}: {e}')
-        return None
-    except requests.exceptions.RequestException as error:
-        print("Ошибка запроса:", error)
+        # Курс: сколько target стоит 1 base
+        rate = target_price / base_price
+        return rate
 
-
-if __name__ == "__main__":
-    get_crypto_prices()
+    except requests.exceptions.Timeout:
+        mb.showerror("Ошибка", "Превышено время ожидания ответа от сервера")
+    except requests.exceptions.HTTPError as e:
+        mb.showerror("Ошибка", f"HTTP-ошибка: {e}")
+    except requests.exceptions.RequestException as e:
+        mb.showerror("Ошибка", f"Сетевая ошибка: {e}")
+    except ValueError as e:
+        mb.showerror("Ошибка", f"Не удалось разобрать JSON: {e}")
+    return None
 
 
 def update_currency_label(event):
     code = target_combobox.get()
-    name = params[code]  # доставаем название валюты из словаря
+    name = CRYPTO_NAMES.get(code, code)
     currency_label.config(text=name)
 
 
 def update_base_label1(event):
     code = base_combobox.get()
-    name = params[code]  # доставаем название валюты из словаря
+    name = CRYPTO_NAMES.get(code, code)
     base_label1.config(text=name)
 
 
@@ -70,52 +91,46 @@ def exchange():
     target_code = target_combobox.get()
     base_code1 = base_combobox.get()
 
-
     if not target_code:
-        mb.showwarning('Внимание', 'Выберите целевую валюту')
+        mb.showwarning("Внимание", "Выберите целевую криптовалюту")
         return
     if not base_code1:
-        mb.showwarning('Внимание', 'Выберите хотя бы одну базовую валюту')
+        mb.showwarning("Внимание", "Выберите базовую криптовалюту")
         return
 
-    message = ''
-
-
-    if base_code1:
-        rate1 = get_crypto_prices(base_code1, target_code)
-        if rate1 is not None:
-            base = params[base_code1]  # доставаем название валюты
-            target = params[target_code]
-            message += f'{rate1:.5f} {target} за 1 {base}\n'
-
-
-    if message:
-        mb.showinfo('Курс обмена', message)
+    rate1 = get_rate(base_code1, target_code)
+    if rate1 is not None:
+        base = CRYPTO_NAMES[base_code1]
+        target = CRYPTO_NAMES[target_code]
+        message = f" {rate1:.8f} {base} за 1 {target}\n"
+        mb.showinfo("Курс обмена", message)
     else:
-        mb.showerror('Ошибка', 'Не удалось получить ни один курс')
+        mb.showerror("Ошибка", "Не удалось получить курс")
 
 
 root = Tk()
-root.title('Курс валют ')
-root.geometry('350x420')
+root.title("Криптик: курсы криптовалют")
+root.geometry("350x420")
 
-# Базовая валюта 1
-Label(text='Базовая валюта 1').pack(pady=10, padx=10)
-base_combobox = ttk.Combobox(values=list(currencies.keys()))  # выпадающее меню
+# Базовая криптовалюта
+Label(text="Базовая криптовалюта").pack(pady=10, padx=10)
+base_combobox = ttk.Combobox(values=list(CRYPTO_IDS.keys()))
 base_combobox.pack()
+base_combobox.set(" ")
 base_label1 = ttk.Label()
-base_label1.pack(pady=2, padx=10)
+base_label1.pack(pady=5, padx=10)
 
-# Целевая валюта
-Label(text='Целевая валюта ').pack(pady=10, padx=10)
-target_combobox = ttk.Combobox(values=list(params))  # выпадающее меню
+# Целевая криптовалюта
+Label(text="Целевая криптовалюта").pack(pady=10, padx=10)
+target_combobox = ttk.Combobox(values=list(CRYPTO_IDS.keys()))
 target_combobox.pack()
+target_combobox.set(" ")
 currency_label = ttk.Label()
-currency_label.pack(pady=2, padx=10)
+currency_label.pack(pady=5, padx=10)
 
-button = Button(text='Получить курс', command=exchange).pack()
+Button(text="Получить курс", command=exchange).pack(pady=10)
 
-base_combobox.bind('<<ComboboxSelected>>', update_base_label1)
-target_combobox.bind('<<ComboboxSelected>>', update_currency_label)
+base_combobox.bind("<<ComboboxSelected>>", update_base_label1)
+target_combobox.bind("<<ComboboxSelected>>", update_currency_label)
 
 root.mainloop()
