@@ -1,6 +1,5 @@
 import requests
-from tkinter import Tk, Label, messagebox as mb
-from tkinter import ttk
+from tkinter import Tk, Label, ttk, messagebox as mb
 
 # Словарь: символ → CoinGecko ID
 CRYPTO_IDS = {
@@ -65,45 +64,39 @@ def get_rate_to_usd(base_code):
     return None
 
 
-def update_base_label(event):
+def update_currency_label(event):
     code = base_combobox.get()
     name = CRYPTO_NAMES.get(code, code)
     base_label.config(text=name)
 
-
-def show_usd_rate():
-    base_code = base_combobox.get().strip()
-
-    if not base_code:
-        mb.showwarning("Внимание", "Выберите криптовалюту из списка!")
-        return
-
-    rate = get_rate_to_usd(base_code)
-    if rate is not None:
-        name = CRYPTO_NAMES[base_code]
-        message = f"{rate:,.2f} USD за 1 {name} ({base_code})"
-        mb.showinfo("Курс к доллару", message)
+    # Обновляем курс после выбора валюты
+    rate_usd = get_rate_to_usd(code)
+    if rate_usd is not None:
+        usd_label.config(text=f"{rate_usd:,.2f} USD")
     else:
-        mb.showerror("Ошибка", "Не удалось получить курс. Попробуйте позже.")
+        usd_label.config(text="Курс не получен")
 
 
 root = Tk()
-root.title("Криптик: Курс к USD")
-root.geometry("350x280")
+root.title("Криптик: Курсы криптовалют")
+root.geometry("350x330")
 
 # Выбор базовой криптовалюты
-Label(root, text="Выберите криптовалюту").pack(pady=15, padx=10)
+Label(root, text="Выберите криптовалюту").pack(pady=10, padx=10)
 base_combobox = ttk.Combobox(root, values=list(CRYPTO_IDS.keys()), state="readonly")
 base_combobox.pack()
 base_combobox.set("")
 
-# Метка с названием выбранной валюты
-base_label = ttk.Label(root, text="", font=("Arial", 11))
+# Метка для названия валюты
+base_label = ttk.Label(root, text="")
 base_label.pack(pady=5, padx=10)
 
-btn = ttk.Button(root, text="Показать курс к USD", command=show_usd_rate)
-btn.pack(pady=20)
+# Метка для курса USD
+usd_label = ttk.Label(root, text="")
+usd_label.pack(pady=5, padx=10)
 
-base_combobox.bind("<<ComboboxSelected>>", update_base_label)
+# Связываем событие выбора с обновлением меток
+base_combobox.bind("<<ComboboxSelected>>", update_currency_label)
 
 root.mainloop()
+
